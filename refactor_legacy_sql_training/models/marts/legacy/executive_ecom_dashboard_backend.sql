@@ -1,9 +1,20 @@
-wiTh payment_line_aggregates As (
+WITH source_customers AS (
+    SELECT * FROM {{ source('jaffle_shop', 'customers') }}
+),
+
+source_orders AS (
+    SELECT * FROM {{ source('jaffle_shop', 'orders') }}
+),
+
+source_payment AS (
+    SELECT * FROM {{ source('stripe', 'payment') }}
+),
+payment_line_aggregates As (
     SeLeCt 
         ORDERID as order_id, 
         max(CREATED) as payment_finalized_date, 
         sum(AMOUNT) / 100.0 as total_amount_paid
-    from TIL_PORTFOLIO_PROJECTS.stripe.payment
+    from source_payment
     where STATUS <> 'fail' and STATUS <> 'test_cancelled' 
     group by 1
 ),
@@ -17,9 +28,9 @@ select Orders.ID as order_id,
         p.payment_finalized_date,
         C.FIRST_NAME    as customer_first_name,
             C.LAST_NAME as customer_last_name
-    FROM TIL_PORTFOLIO_PROJECTS.jaffle_shop.orders as Orders
+    FROM source_orders as Orders
     left join payment_line_aggregates p ON orders.ID = p.order_id
-    left join TIL_PORTFOLIO_PROJECTS.jaffle_shop.customers C on orders.USER_ID = C.ID 
+    left join source_customers C on orders.USER_ID = C.ID 
     WHeRE C.FIRST_NAME NOT LIKE 'tmp_%' AND C.LAST_NAME IS NOT NULL 
 ),
 
@@ -28,8 +39,8 @@ customer_orders
         , min(ORDER_DATE) as first_order_date
         , max(ORDER_DATE) as most_recent_order_date
         , count(ORDERS.ID) AS number_of_orders
-    from TIL_PORTFOLIO_PROJECTS.jaffle_shop.customers C
-    left join TIL_PORTFOLIO_PROJECTS.jaffle_shop.orders as Orders
+    from source_customers C
+    left join source_orders as Orders
     on orders.USER_ID = C.ID
     where Orders.STATUS NOT IN ('returned', 'blacklist_void') 
     group by 1)
@@ -44,8 +55,8 @@ select
     
     (
         SELECT SUM(sub_p.AMOUNT) / 100.0 
-        FROM TIL_PORTFOLIO_PROJECTS.stripe.payment sub_p
-        JOIN TIL_PORTFOLIO_PROJECTS.jaffle_shop.orders sub_o ON sub_p.ORDERID = sub_o.ID
+        FROM source_payment sub_p
+        JOIN source_orders sub_o ON sub_p.ORDERID = sub_o.ID
         WHERE sub_o.USER_ID = p.customer_id 
           AND sub_o.ID <= p.order_id 
           AND sub_p.STATUS = 'success'
@@ -56,7 +67,7 @@ select
     CASE 
         WHEN p.total_amount_paid > (
             SELECT AVG(shadow_p.AMOUNT) / 100.0 
-            FROM TIL_PORTFOLIO_PROJECTS.stripe.payment shadow_p 
+            FROM source_payment shadow_p 
             WHERE shadow_p.STATUS = 'success'
         ) THEN 'premium_tier' 
         ELSE 'standard_tier' 
