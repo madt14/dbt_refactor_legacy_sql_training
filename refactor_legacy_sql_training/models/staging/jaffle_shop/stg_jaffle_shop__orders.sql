@@ -1,6 +1,6 @@
 with
 
-source_orders as (
+source as (
     select * from {{ source('jaffle_shop', 'orders') }}
 ),
 
@@ -10,7 +10,7 @@ transformed as (
         user_id as customer_id,
         order_date as order_placed_at,
         status as order_status
-    from source_orders
+    from source
 )
 
 select * from transformed

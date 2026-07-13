@@ -5,8 +5,8 @@
 -- Import CTEs
 with 
 
-source_payment as (
-    select * from {{ source('stripe', 'payment') }}
+source as (
+    select * from {{ ref('stg_stripe__payment') }}
 ),
 
 -- Logical CTEs
@@ -16,11 +16,11 @@ source_payment as (
 
 final as (
 select 
-    id as transaction_identifier,
-    status as tx_status,
-    amount / 100.0 as normalized_amount
-from source_payment
-where status = 'success'
+    payment_id as transaction_identifier,
+    payment_status as tx_status,
+    payment_amount_cents / 100.0 as normalized_amount
+from source
+where payment_status = 'success'
 )
 
 select * from final
