@@ -1,24 +1,28 @@
 name: refactor_legacy_sql_training
 
+version: "1.0.0"
+config-version: 2
+
 profile: refactor_legacy_sql_training
 
-seed-paths: ["seeds"]
 model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
 macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
 clean-targets:
   - "target"
   - "dbt_packages"
-
-seeds:
-  # Builds seeds into '<your_schema_name>_raw'
-  refactor_legacy_sql_training:
-    +schema: raw
 
 models:
   refactor_legacy_sql_training:
     +static_analysis: strict
     # Materialize staging models as views, and marts as tables
     staging:
+      +materialized: view
+    intermediate:
       +materialized: view
     marts:
       +materialized: table
