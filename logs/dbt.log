@@ -1,0 +1,43 @@
+==================== 2026-07-12T21:49:22.112181Z | 019f584e-6b07-7073-b457-cb816b63a262 ====================
+21:49:22.112483 [info ]: Installing dbt project and profile setup
+21:49:23.073533 [info ]: Info Created .vscode/extensions.json with dbt extension recommendation
+21:49:23.075810 [info ]: Success Project created successfully!
+21:49:23.075907 [info ]: Info Project name: refactor_legacy_sql_training
+21:49:23.076101 [info ]: Info Project directory: refactor_legacy_sql_training
+21:49:23.076188 [info ]: Info Setting up your profile...
+21:49:23.077508 [info ]: Loading ~/.dbt/profiles.yml
+21:49:23.079448 [info ]: Info Creating new profile...
+21:49:34.601213 [info ]: No dbt_cloud.yml found - proceeding without cloud pre-population
+21:52:45.192249 [info ]: Success Profile written to C:\Users\Marc\.dbt\profiles.yml
+21:52:45.193256 [info ]: Validating profile inputs, adapters, and connection
+
+21:52:45.193610 [info ]: dbt-fusion 2.0.0-preview.196
+21:52:45.194287 [info ]: Started loading project
+21:52:45.224034 [info ]: Loading ~/.dbt/profiles.yml
+21:52:45.235263 [info ]: Finished loading project [  0.04s]
+21:52:45.235443 [info ]: Started debugging
+21:52:45.235522 [info ]: Debugging profile: dev
+21:52:45.235623 [info ]: Debugging dbt version: 2.0.0-preview.196
+21:52:45.235717 [info ]: Debugging platform: windows x86_64 (windows)
+21:52:45.235803 [info ]: Debugging adapter type: snowflake (remote)
+21:52:45.293529 [info ]: Debugging dependencies:
+  git: OK
+21:52:45.294298 [info ]: Debugging connection:
+  "authenticator": "externalbrowser",
+  "account": "TILUK-CORE",
+  "user": "MARCANTHONY.TUCKER@THEINFORMATIONLAB.COM",
+  "database": "TIL_PORTFOLIO_PROJECTS",
+  "warehouse": "DATASCHOOL_WH",
+  "schema": "DBT_MTUCKER",
+  "role": "DATASCHOOL"
+21:52:49.653877 [debug]: Query executed on node unknown:
+select 1 as id
+21:52:49.858789 [debug]: Query executed on node unknown:
+SHOW PARAMETERS LIKE 'ALLOW_ID_TOKEN' IN ACCOUNT
+21:52:49.858913 [info ]: Debugging externalbrowser connection caching: Disabled. Consider enabling the Snowflake system parameter allow_id_token, to open fewer browser tabs during authentication. See https://docs.getdbt.com/docs/local/connect-data-platform/snowflake-setup?version=2.0#supported-authentication-types for more info.
+21:52:49.859350 [info ]: Debugging connection test: OK
+21:52:49.859913 [info ]: Debugged All checks passed!
+21:52:49.860287 [info ]: Finished debugging [  4.62s]
+21:52:50.167699 [info ]: 
+==================== Execution Summary =====================
+Finished 'init' successfully for target 'dev' [3m 28s]
