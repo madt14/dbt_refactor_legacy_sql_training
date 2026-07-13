@@ -9,7 +9,7 @@ aggregated as (
         max(payment_created_at) as payment_finalized_date, 
         sum(payment_amount_cents) / 100.0 as total_amount_paid
     from payment
-    WHERE payment_status <> 'fail'
+    WHERE payment_status = 'success'
     group by 1
 )
 

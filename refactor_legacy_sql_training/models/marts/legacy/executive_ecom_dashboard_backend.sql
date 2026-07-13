@@ -1,4 +1,4 @@
--- Import CTEs
+-- import ctes
 with customers as (
     select * from {{ ref('stg_jaffle_shop__customers') }}
 ),
@@ -19,7 +19,11 @@ int_customer_orders as (
     select * from {{ ref('int_orders__grouped_by_customer') }}
 ),
 
--- Logical CTEs
+int_benchmarks as (
+    select * from {{ ref('int_payments__global_financial_benchmarks') }}
+),
+
+-- logical ctes
 paid_orders as (
     select 
         orders.order_id,
@@ -36,7 +40,7 @@ paid_orders as (
 ),
 
 
--- Final CTE
+-- final cte
 final as (
     select
         paid_orders.order_id,
@@ -47,29 +51,35 @@ final as (
         paid_orders.payment_finalized_date,
         paid_orders.customer_first_name,
         paid_orders.customer_last_name,
-        row_number() over (order by paid_orders.order_id) as transaction_seq,
-        row_number() over (partition by customer_id order by paid_orders.order_id) as customer_sales_seq,
-        case when int_customer_orders.first_order_date = paid_orders.order_placed_at
-        then 'new'
-        else 'return' end as nvsr,
         
-        (
-            select 
-                sum(sub_p.payment_amount_cents) / 100.0 
-            from payment sub_p
-            join orders sub_o on sub_p.order_id = sub_o.order_id
-            where sub_o.customer_id = paid_orders.customer_id 
-            and sub_o.order_id <= paid_orders.order_id 
-            and sub_p.payment_status = 'success'
+        row_number() over (
+            order by paid_orders.order_id
+        ) as transaction_seq,
+        
+        row_number() over (
+            partition by paid_orders.customer_id 
+            order by paid_orders.order_id
+        ) as customer_sales_seq,
+        
+        case 
+            when int_customer_orders.first_order_date = paid_orders.order_placed_at
+            then 'new'
+            else 'return' 
+        end as nvsr,
+        
+        sum(coalesce(paid_orders.total_amount_paid,0)) over (
+            partition by paid_orders.customer_id 
+            order by paid_orders.order_id
+            rows between unbounded preceding and current row
         ) as cumulative_lifetime_value_to_date,
         
         int_customer_orders.first_order_date as fdos,
         
         case 
             when paid_orders.total_amount_paid > (
-                select avg(shadow_p.payment_amount_cents) / 100.0 
-                from payment shadow_p 
-                where shadow_p.payment_status = 'success'
+                select
+                    global_average_payment_amount
+                from int_benchmarks
             ) then 'premium_tier' 
             else 'standard_tier' 
         end as customer_value_segment
