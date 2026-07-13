@@ -1,8 +1,0 @@
-version: 2
-
-sources:
-  - name: stripe
-    database: TIL_PORTFOLIO_PROJECTS
-    schema: stripe
-    tables:
-      - name: payment
