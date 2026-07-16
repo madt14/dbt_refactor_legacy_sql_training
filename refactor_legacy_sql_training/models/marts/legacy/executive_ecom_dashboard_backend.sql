@@ -1,13 +1,11 @@
--- import ctes
-with customers as (
-    select * from {{ ref('stg_jaffle_shop__customers') }}
+-- Import CTEs
+with 
+
+int_orders_enriched as (
+    select * from {{ ref('int_orders__enriched') }}
 ),
 
-orders as (
-    select * from {{ ref('stg_jaffle_shop__orders') }}
-),
-
-payment as (
+stg_payment as (
     select * from {{ ref('stg_stripe__payment') }}
 ),    
 
@@ -23,60 +21,45 @@ int_benchmarks as (
     select * from {{ ref('int_payments__global_financial_benchmarks') }}
 ),
 
--- logical ctes
-paid_orders as (
-    select 
-        orders.order_id,
-        orders.customer_id,
-        orders.order_placed_at,
-        orders.order_status,
-        int_payments.total_amount_paid,
-        int_payments.payment_finalized_date,
-        customers.customer_first_name,
-        customers.customer_last_name
-    from orders
-    left join int_payments on orders.order_id = int_payments.order_id
-    left join customers on orders.customer_id = customers.customer_id 
-),
 
 
--- final cte
+-- Final CTE
 final as (
     select
-        paid_orders.order_id,
-        paid_orders.customer_id,
-        paid_orders.order_placed_at,
-        paid_orders.order_status,
-        paid_orders.total_amount_paid,
-        paid_orders.payment_finalized_date,
-        paid_orders.customer_first_name,
-        paid_orders.customer_last_name,
+        p.order_id,
+        p.customer_id,
+        p.order_placed_at,
+        p.order_status,
+        p.total_amount_paid,
+        p.payment_finalized_date,
+        p.customer_first_name,
+        p.customer_last_name,
         
         row_number() over (
-            order by paid_orders.order_id
+            order by p.order_id
         ) as transaction_seq,
         
         row_number() over (
-            partition by paid_orders.customer_id 
-            order by paid_orders.order_id
+            partition by p.customer_id 
+            order by p.order_id
         ) as customer_sales_seq,
         
         case 
-            when int_customer_orders.first_order_date = paid_orders.order_placed_at
+            when int_customer_orders.first_order_date = p.order_placed_at
             then 'new'
             else 'return' 
         end as nvsr,
         
-        sum(coalesce(paid_orders.total_amount_paid,0)) over (
-            partition by paid_orders.customer_id 
-            order by paid_orders.order_id
+        sum(coalesce(p.total_amount_paid,0)) over (
+            partition by p.customer_id 
+            order by p.order_id
             rows between unbounded preceding and current row
         ) as cumulative_lifetime_value_to_date,
         
         int_customer_orders.first_order_date as fdos,
         
         case 
-            when paid_orders.total_amount_paid > (
+            when p.total_amount_paid > (
                 select
                     global_average_payment_amount
                 from int_benchmarks
@@ -84,9 +67,9 @@ final as (
             else 'standard_tier' 
         end as customer_value_segment
 
-    from paid_orders
+    from int_orders_enriched p
     left join int_customer_orders using (customer_id)
-    order by paid_orders.order_id
+    order by p.order_id
 )
 
 select * from final
