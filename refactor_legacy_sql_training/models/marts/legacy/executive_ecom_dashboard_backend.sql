@@ -10,7 +10,7 @@ stg_payment as (
 ),    
 
 int_payments as (
-    select * from {{ ref('int_payments__aggregated_by_order') }}
+    select * from {{ ref('int_orders__pivoted_payments') }}
 ),
 
 int_customer_orders as (
@@ -26,14 +26,8 @@ int_benchmarks as (
 -- Final CTE
 final as (
     select
-        p.order_id,
-        p.customer_id,
-        p.order_placed_at,
-        p.order_status,
-        p.total_amount_paid,
-        p.payment_finalized_date,
-        p.customer_first_name,
-        p.customer_last_name,
+        -- Since this is not a staging model, it would be ok to do a p* to select everything
+        p.*,
         
         row_number() over (
             order by p.order_id

@@ -17,7 +17,7 @@ stg_orders as (
 ),
 
 int_payments as (
-    select * from {{ ref('int_payments__aggregated_by_order') }}
+    select * from {{ ref('int_orders__pivoted_payments') }}
 ),
 
 -- Logical CTEs
@@ -29,6 +29,7 @@ enriched as (
         stg_orders.order_placed_at,
         stg_orders.order_status,
         int_payments.total_amount_paid,
+        int_payments.total_amount_failed,
         int_payments.payment_finalized_date,
         stg_customers.customer_first_name,
         stg_customers.customer_last_name

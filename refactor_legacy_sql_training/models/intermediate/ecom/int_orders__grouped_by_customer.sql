@@ -11,11 +11,12 @@ customer_aggregations as (
         customers.customer_id,
         min(order_placed_at) as first_order_date,
         max(order_placed_at) as most_recent_order_date,
-        count(orders.order_id) as number_of_orders
+
+        -- Pivoted conditional count replaces the exclusionary WHERE clause
+        SUM(case when orders.order_status not in ('returned', 'blacklist_void') then 1 else 0 end) as number_of_orders
     from customers
     left join orders
     on orders.customer_id = customers.customer_id
-    where orders.order_status not in ('returned', 'blacklist_void') 
     group by 1
 )
 
