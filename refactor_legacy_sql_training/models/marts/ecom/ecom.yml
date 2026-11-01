@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "Conformed dimension model for customer entities, centralizing profile attributes, purchase milestones, and lifetime financial metrics."
+    columns:
+      - name: customer_id
+        description: "Primary key of the customer dimension. Represents a unique cleansed customer profile."
+      - name: customer_first_name
+        description: "Cleansed first name of the customer."
+      - name: customer_last_name
+        description: "Cleansed last name of the customer."
+      - name: first_order_date
+        description: "Timestamp indicating the earliest valid order placed by this customer."
+      - name: most_recent_order_date
+        description: "Timestamp indicating the most recent valid order placed by this customer."
+      - name: number_of_orders
+        description: "Total count of non-returned, non-voided orders placed by this customer. Coalesced to 0 for users with no purchases."
+      - name: customer_lifetime_value
+        description: "Total sum of successful payments attributable to this customer in USD. Coalesced to 0 for users with no settled payments."
+      - name: customer_segment
+        description: "Behavioral segmentation category based on order activity and lifetime spend: 'prospect' (0 orders), 'standard' (< $100 LTV), or 'vip' (>= $100 LTV)."
